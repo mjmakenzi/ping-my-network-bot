@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    # Required for ping/traceroute to work (needs network capabilities)
+    privileged: true  # Add this - gives full access to host devices
     cap_add:
       - NET_RAW
       - NET_ADMIN
-    network_mode: host  # Allows direct network access for accurate diagnostics
+    network_mode: host

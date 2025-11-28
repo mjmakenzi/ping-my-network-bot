@@ -16,9 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Run as non-root user (optional, but recommended)
-RUN useradd -m -u 1000 botuser && chown -R botuser:botuser /app
-USER botuser
+# Remove the non-root user setup - run as root for network access
+# RUN useradd -m -u 1000 botuser && chown -R botuser:botuser /app
+# USER botuser
 
 # Run the bot
 CMD ["python", "main.py"]
