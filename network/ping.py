@@ -14,24 +14,47 @@ class PingResult:
     jitter_ms: float
 
 
+
 def probe_host(ip: str, count: int = 5, timeout: float = 2.0) -> PingResult:
     """
-    Ping `ip` count times and summarize reachability, latency, and jitter stats.
+    Ping `ip` count times using system ping command.
     """
     try:
-        hosts = multiping(
-            [ip],
-            count=count,
-            timeout=timeout,
-            interval=0.2,
-            privileged=False,  # keeps it usable without raw-socket perms
+        # Use system ping command (more reliable in containers)
+        result = subprocess.run(
+            ['ping', '-c', str(count), '-W', str(int(timeout * 1000)), ip],
+            capture_output=True,
+            text=True,
+            timeout=timeout * count + 2
         )
-        host = hosts[0]
-        alive = host.is_alive
-        avg_rtt = host.avg_rtt or 0.0
-        packet_loss = host.packet_loss * 100.0
-        jitter = (host.max_rtt - host.min_rtt) if host.packets_received else 0.0
-    except ICMPLibError:
+        
+        if result.returncode == 0:
+            # Parse ping output
+            output = result.stdout
+            # Extract packet loss
+            loss_match = re.search(r'(\d+)% packet loss', output)
+            packet_loss = float(loss_match.group(1)) if loss_match else 100.0
+            
+            # Extract RTT stats
+            rtt_match = re.search(r'min/avg/max/mdev = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)', output)
+            if rtt_match:
+                min_rtt = float(rtt_match.group(1))
+                avg_rtt = float(rtt_match.group(2))
+                max_rtt = float(rtt_match.group(3))
+                jitter = float(rtt_match.group(4))
+                alive = packet_loss < 100.0
+            else:
+                avg_rtt = 0.0
+                jitter = 0.0
+                alive = False
+        else:
+            alive = False
+            avg_rtt = 0.0
+            packet_loss = 100.0
+            jitter = 0.0
+            
+    except Exception as e:
+        print(f"DEBUG: Ping error for {ip}: {e}")
         alive = False
         avg_rtt = 0.0
         packet_loss = 100.0
