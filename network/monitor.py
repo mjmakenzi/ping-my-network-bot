@@ -15,6 +15,7 @@ load_dotenv()
 GATEWAY_IP = os.getenv("GATEWAY_IP", "192.168.1.1")
 REFERENCE_IP = os.getenv("REFERENCE_IP", "8.8.8.8")
 TARGET_IP = os.getenv("TARGET_IP", "1.1.1.1")
+_DEFAULT_TARGET_IP = os.getenv("TARGET_IP", "1.1.1.1")
 PING_COUNT = 5
 PING_TIMEOUT = 2.0
 
@@ -40,10 +41,13 @@ _last_snapshot: MonitorSnapshot | None = None
 
 def run_cycle() -> None:
     global _last_snapshot
+    
+    # Read TARGET_IP dynamically each cycle
+    target_ip = os.getenv("TARGET_IP", _DEFAULT_TARGET_IP)
 
     gateway = probe_host(GATEWAY_IP, count=PING_COUNT, timeout=PING_TIMEOUT)
     reference = probe_host(REFERENCE_IP, count=PING_COUNT, timeout=PING_TIMEOUT)
-    target = probe_host(TARGET_IP, count=PING_COUNT, timeout=PING_TIMEOUT)
+    target = probe_host(target_ip, count=PING_COUNT, timeout=PING_TIMEOUT)  # Use dynamic value
 
     _last_snapshot = MonitorSnapshot(
         timestamp=time.time(),
@@ -56,7 +60,6 @@ def run_cycle() -> None:
     diagnosis = classify(_last_snapshot)
     print(format_snapshot(_last_snapshot))
     print(f"Diagnosis: {diagnosis.value}\n")
-
 
 def format_snapshot(snapshot: MonitorSnapshot) -> str:
     def fmt(result: PingResult) -> str:
