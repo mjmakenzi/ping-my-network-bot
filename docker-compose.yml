@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  network-bot:
+    build: .
+    container_name: ping-my-network-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    # Required for ping/traceroute to work (needs network capabilities)
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    network_mode: host  # Allows direct network access for accurate diagnostics
