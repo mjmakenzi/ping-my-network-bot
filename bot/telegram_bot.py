@@ -23,13 +23,13 @@ from network.monitor import (
 load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") 
 ALERT_COOLDOWN = timedelta(minutes=5)
 
 _muted_until: datetime | None = None
 _last_diagnosis: Diagnosis | None = None
 _last_alert_time: datetime | None = None
-_default_chat_id: int | None = None
-
+_default_chat_id: int | None = int(os.getenv("TELEGRAM_CHAT_ID")) if os.getenv("TELEGRAM_CHAT_ID") else None
 
 def launch_monitor_thread() -> None:
     thread = threading.Thread(target=start_monitor, daemon=True)

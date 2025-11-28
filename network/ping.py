@@ -1,8 +1,7 @@
+import subprocess
+import re
 from dataclasses import dataclass
 from typing import Optional
-
-from icmplib import multiping
-from icmplib.exceptions import ICMPLibError
 
 
 @dataclass
